@@ -53,7 +53,7 @@ If the network or upstream server is temporarily unavailable, the app immediatel
 ```bash
 # 1. Clone the repository
 git clone https://github.com/shizamuru-dev/medusa-next
-cd medusa
+cd medusa-next
 
 # 2. Install dependencies
 flutter pub get
