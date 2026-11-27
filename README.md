@@ -123,13 +123,6 @@ flutter test
 
 ```
 
-## 🛡️ Configuration
-
-Build-time environment variables passed via `--dart-define`:
-
-* **`API_BASE_URL`**: Base URL of your Medusa Backend instance (defaults to `http://10.0.2.2:8080` for Android emulator).
-* **`APP_ENV`**: Environment tag (`dev` / `prod`).
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
