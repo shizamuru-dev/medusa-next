@@ -1,0 +1,82 @@
+name: Build Flutter APKs & Appbundle
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Flutter Artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [apks]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        if: matrix.target != 'documentation'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.10'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APKs (Split by ABI)
+        if: matrix.target == 'apks'
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APK artifacts
+        if: matrix.target == 'apks'
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-artifacts-apks
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          overwrite: true
+
+  publish:
+    name: Publish the binaries
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get project version
+        id: project_version
+        uses: its404/get-flutter-version@v1.0.0
+
+      - name: Download APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: publish-artifacts-apks
+          path: artifacts/
+
+      - name: Display downloaded files
+        run: ls -la artifacts/
+
+      - name: Release Binary
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/*.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ steps.project_version.outputs.version_number }}+${{ steps.project_version.outputs.build_number }}-${{ github.run_number }}
+          name: "Release ${{ steps.project_version.outputs.version_number }}+${{ steps.project_version.outputs.build_number }}"
+          generateReleaseNotes: true
